@@ -37,3 +37,5 @@ El objetivo es automatizar el cierre administrativo de los eventos académicos. 
     Prueba de relación: Intentar generar un certificado para un usuario no inscrito en el evento (debe fallar).
     Prueba de negocio: Verificar que participantes no acreditados no figuren en la cola de emisión.
     Prueba de duplicidad: Asegurar que no se generen dos códigos iguales para distintos certificados.
+
+////
