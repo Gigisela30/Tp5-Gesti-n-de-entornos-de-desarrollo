@@ -9,6 +9,17 @@ El objetivo es automatizar el cierre administrativo de los eventos académicos. 
     Criterio: El sistema envía el PDF tras la acreditación exitosa y finalización del evento.
     Historia: Como administrador, quiero un código de verificación en cada diploma.
     Criterio: Cada PDF incluye un código único vinculado a una base de datos de validación.
+En **Spec 05 - Emision de certificados**:
+
+Historia enriquecida:
+
+“Como participante y administrador, quiero que la generación, envío y validación pública de certificados se realicen bajo entornos seguros y controlados, de modo que se garantice la integridad de los documentos y se eviten fraudes o caídas del servicio por alta demanda.”
+
+Controles OWASP:
+- Restricción perimetral mediante un límite estricto de peticiones (Rate Limiting) al buscador público para bloquear ataques automatizados de enumeración de códigos por fuerza bruta.
+- Sanitización y parametrización mandatoria de los campos de entrada de texto del portal de validación para repeler ataques de inyección SQL.
+- Ejecución del servicio de Puppeteer dentro de un ambiente restringido (Sandbox) y desacoplado mediante colas de tareas asíncronas para evitar la denegación de servicio (DoS) y escaladas de permisos.
+
 ## 3. Requisitos Funcionales y Reglas de Negocio
     RF1: Generar certificados en PDF basados en plantillas.
     RF2: Envío automático de certificados por email.

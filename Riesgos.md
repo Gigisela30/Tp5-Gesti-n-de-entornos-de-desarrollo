@@ -233,3 +233,173 @@ Controles OWASP:
 ## 8. Conclusión
 El análisis permite anticipar riesgos críticos y definir acciones concretas.  
 El enriquecimiento de historias con controles OWASP fortalece la seguridad del sistema y asegura cumplimiento de buenas prácticas.
+
+------------------------------------------------------------------------------------------------
+#  Análisis y Gestión de Riesgos - Spec 05: Emisión de certificados
+
+El presente análisis de riesgo ha sido confeccionado para la **Institución Académica Organizadora**. En particular, se ha optado por la evaluación de los **mecanismos de seguridad y validación de la Spec 05: Emisión de Certificados**. El mismo ha sido confeccionado siguiendo los lineamientos de la metodología Software Risk Management (SRM) del Software Engineering Institute (SEI), es en base a esta selección que se ha estructurado el contenido del presente documento.
+
+Este documento evalúa los riesgos críticos que afectan tanto a los recursos humanos como a los materiales del proyecto, abarcando todo el ciclo de vida del software, desde el relevamiento de requerimientos hasta la implantación.
+
+### Inventario de activos a proteger
+* **Activos de Información:** Base de datos de validación de códigos únicos, certificados PDF almacenados, hashes de integridad criptográfica.
+* **Activos de Software:** Servicio de generación dinámica de PDF (Puppeteer), portal de validación pública, worker de envío de correos por email.
+* **Activos de Procesos:** Flujo de firma digital e inmutabilidad del código de verificación.
+
+### Objetivos
+* Garantizar que solo los participantes legítimamente acreditados reciban certificados auténticos e inalterables.
+* Asegurar la disponibilidad absoluta del portal de validación y la entrega efectiva de los documentos por correo electrónico.
+
+### Equipo de trabajo
+* **[Tu Nombre / Participante del Grupo]** – Analista de Riesgos y Seguridad
+
+---
+
+## Taxonomía de los riesgos
+
+| Identificador | Elemento | Riesgo | Vinculación del riesgo |
+| :--- | :--- | :--- | :--- |
+| **R1** | Firma Digital / Hash | **Falsificación de Documentos:** Alteración del PDF o del código de verificación sin detección por parte del sistema. | Producto |
+| **R2** | Portal de Validación | **Enumeración de Certificados (OWASP A04):** Ataques de fuerza bruta para descubrir códigos de verificación válidos en el portal público. | Producto |
+| **R3** | Puppeteer / PDF | **Denegación de Servicio (DoS):** Consumo excesivo de recursos del servidor durante la generación masiva de PDFs concurrentes. | Producto |
+| **R4** | Worker de Correo | **Bloqueo por SPAM:** Los certificados no llegan a destino debido a una mala reputación del servidor de envío. | Proyecto |
+| **R5** | Almacenamiento (S3) | **Acceso no Autorizado a Repositorio:** Filtración de certificados almacenados por configuraciones de permisos incorrectas. | Producto / Negocio |
+
+---
+
+## Declaración de los riesgos
+
+* **R2 - Portal de Validación:**
+    * **Condición:** Si el buscador público de códigos carece de límites de peticiones (Rate Limiting) y usa identificadores predecibles o secuenciales...
+    * **Consecuencia:** ...entonces usuarios o bots maliciosos podrán adivinar los códigos e interceptar documentos ajenos de forma masiva.
+    * **Efecto:** Violación de la privacidad de los datos de los participantes y riesgo inminente de fraude masivo.
+* **R3 - Puppeteer / PDF:**
+    * **Condición:** Si la compilación dinámica de las plantillas HTML a PDF se ejecuta de manera síncrona en el hilo principal del servidor bajo alta demanda...
+    * **Consecuencia:** ...entonces el sistema superará los límites de tiempo de respuesta provocando caídas del servicio web.
+    * **Efecto:** Inoperatividad total del sistema durante el cierre de eventos multitudinarios.
+
+---
+
+## Efecto
+
+### Estimación de la probabilidad
+
+| Rango de probabilidad | Promedio para el cálculo | Expresión de lenguaje natural | Valor numérico |
+| :--- | :--- | :--- | :--- |
+| de 1% a 10% | 5% | Baja | 1 |
+| de 11% a 25% | 18% | Poco probable | 2 |
+| de 26% a 55% | 40% | Media | 3 |
+| de 56% a 80% | 68% | Altamente probable | 4 |
+| de 81% a 99% | 90% | Casi seguro | 5 |
+
+### Estimación de probabilidad para cada riesgo:
+
+| Identificador | Elemento | Expresión | Probabilidad |
+| :--- | :--- | :--- | :--- |
+| **R1** | Firma Digital / Hash | Baja | 1 |
+| **R2** | Portal de Validación | Media | 3 |
+| **R3** | Puppeteer / PDF | Altamente probable | 4 |
+| **R4** | Worker de Correo | Poco probable | 2 |
+| **R5** | Almacenamiento (S3) | Baja | 1 |
+
+## Estimación del Impacto 
+
+### Tabla de Referencia de Impacto 
+| Criterio | Período en el que el proyecto se verá afectado | Valor numérico |
+| :--- | :--- | :--- |
+| Insignificante | Menos de 24 horas (sin afectación de datos) | 1 |
+| Marginal | De 1 a 3 días (afectación visual menor) | 2 |
+| Medio | De 3 a 7 días (re-trabajo en módulos aislados) | 3 |
+| Crítico | Más de 1 semana (corrupción parcial de base de datos) | 4 |
+| Catastrófico | Parálisis total del proyecto / Sanciones legales graves | 5 |
+
+### Estimación del impacto
+
+### Estimación del impacto para cada riesgo
+
+| Identificador | Riesgo | Impacto |
+| :--- | :--- | :--- |
+| **R1** | Falsificación de Documentos | Catastrófico (5) |
+| **R2** | Enumeración de Certificados | Crítico (4) |
+| **R3** | Denegación de Servicio (DoS) | Crítico (4) |
+| **R4** | Bloqueo por SPAM | Medio (3) |
+| **R5** | Acceso no Autorizado a Repositorio | Crítico (4) |
+
+---
+
+## Magnitud de exposición al riesgo
+
+Umbrales: 1 = Bajo riesgo | 2 a 3 = Riesgo medio | 4 a 5 = Alto riesgo.
+
+| Identificado | Riesgo | Impacto | Probabilidad | Exposición |
+| :--- | :--- | :--- | :--- | :--- |
+| **R3** | Denegación de Servicio (DoS) | 4 | 4 | **16 (Alto Riesgo)** |
+| **R2** | Enumeración de Certificados | 4 | 3 | **12 (Alto Riesgo)** |
+| **R1** | Falsificación de Documentos | 5 | 1 | **5 (Riesgo Medio)** |
+| **R5** | Acceso no Autorizado a Repositorio | 4 | 1 | **4 (Riesgo Medio)** |
+| **R4** | Bloqueo por SPAM | 3 | 2 | **6 (Riesgo Medio)** |
+
+---
+
+## Planes de gestión de los riesgos
+
+La gestión de los riesgos se reconoce como un proceso continuo, por lo que el presente documento podría ser adaptado a medida que se avanza con su ejecución.
+
+Se presentan los planes de acción (preventivos) y de contingencias (reactivos) para los riesgos cuya exposición fuera superior a los umbrales definidos en el análisis precedente.
+
+### 1. R3 - Denegación de Servicio (DoS) en Generación de PDF
+
+| Descripción de aspectos principales del riesgo | Importancia | Alta. Evita que el servidor colapse por picos de procesamiento al finalizar un evento. |
+| :--- | :--- | :--- |
+| | **Información requerida para su seguimiento** | Logs de consumo de CPU/Memoria, tamaño de la cola del worker y tasa de timeouts. |
+| | **Responsable** | Arquitecto de Software / DevOps. |
+| | **Recursos necesarios** | Servidor de mensajería (Redis), entorno aislado para workers en la nube. |
+
+#### 1.1. Plan de acción
+* **1.1.1.** Aislar por completo el motor de conversión HTML a PDF (Puppeteer) del hilo de ejecución principal de la aplicación web.
+* **1.1.2.** Implementar una cola de tareas distribuidas asíncronas para dosificar y encolar las solicitudes masivas de certificados.
+
+#### 1.2. Plan de contingencias
+* **Disparador:** Las alertas del sistema registran tiempos de respuesta de la API superiores a los 10 segundos de forma sostenida.
+* **1.2.1.** Apagar de manera temporal la descarga instantánea en el navegador web por parte de los usuarios.
+* **1.2.2.** Habilitar el flujo alternativo de generación diferida en segundo plano, notificando al participante por correo electrónico una vez su archivo esté procesado y subido de forma segura.
+
+---
+
+### 2. R2 - Enumeración de Certificados en el Portal de Validación
+
+| Descripción de aspectos principales del riesgo | Importancia | Crítica. Protege la privacidad de los datos de los usuarios e impide la descarga masiva ilícita. |
+| :--- | :--- | :--- |
+| | **Información requerida para su seguimiento** | Registro inalterable de búsquedas fallidas, IPs con peticiones anómalas concurrentes. |
+| | **Responsable** | Desarrollador Backend Principal / Especialista en AppSec. |
+| | **Recursos necesarios** | Módulo de middleware para Rate Limiting, generador criptográfico CSPRNG. |
+
+#### 2.1. Plan de acción
+* **2.1.1.** Modificar los criterios de aceptación e implementar controles OWASP de sanitización estricta de variables y Rate Limiting en el portal público.
+* **2.1.2.** Cambiar la regla de negocio para que el código único inmutable deje de ser secuencial y pase a ser un string aleatorio complejo criptográficamente seguro.
+
+#### 2.2. Plan de contingencias
+* **Disparador:** Detección en los logs de más de 50 peticiones de validación fallidas originadas desde una misma dirección IP en menos de 1 minuto.
+* **2.2.1.** Ejecutar el bloqueo automatizado de la IP sospechosa mediante reglas activas del Firewall.
+* **2.2.2.** Activar un sistema de verificación visual (CAPTCHA) obligatorio en el endpoint de búsqueda antes de procesar nuevas consultas en la base de datos.
+
+---
+
+## 7. Enriquecimiento de historias de usuario
+
+
+En **Spec 05 - Emision de certificados**:
+
+Historia enriquecida:
+
+“Como participante y administrador, quiero que la generación, envío y validación pública de certificados se realicen bajo entornos seguros y controlados, de modo que se garantice la integridad de los documentos y se eviten fraudes o caídas del servicio por alta demanda.”
+
+Controles OWASP:
+- Restricción perimetral mediante un límite estricto de peticiones (Rate Limiting) al buscador público para bloquear ataques automatizados de enumeración de códigos por fuerza bruta.
+- Sanitización y parametrización mandatoria de los campos de entrada de texto del portal de validación para repeler ataques de inyección SQL.
+- Ejecución del servicio de Puppeteer dentro de un ambiente restringido (Sandbox) y desacoplado mediante colas de tareas asíncronas para evitar la denegación de servicio (DoS) y escaladas de permisos.
+
+----------
+
+## 8. Conclusión
+El análisis permite anticipar riesgos críticos en el módulo de certificados y definir acciones concretas de mitigación. El enriquecimiento de historias con controles OWASP fortalece la seguridad del sistema y asegura el cumplimiento de buenas práctica.
