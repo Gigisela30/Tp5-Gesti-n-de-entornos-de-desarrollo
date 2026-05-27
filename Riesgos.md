@@ -70,3 +70,166 @@ Controles OWASP:
 ## 8. Conclusión
 El análisis permite anticipar riesgos críticos y definir acciones concretas.  
 El enriquecimiento de historias con controles OWASP fortalece la seguridad del sistema y asegura cumplimiento de buenas prácticas.
+
+
+
+------------------------------------------------------------------------------------------------
+# Análisis y Gestión de Riesgos - Spec 03: Gestión de Roles
+
+El presente análisis de riesgo ha sido confeccionado para la plataforma de Gestión de Eventos Académicos e Institucionales. En particular, se ha optado por la evaluación del módulo transversal de control de acceso basado en roles (RBAC). El mismo ha sido confeccionado siguiendo los lineamientos de la metodología Software Risk Management (SRM) del Software Engineering Institute (SEI), es en base a esta selección que se ha estructurado el contenido del presente documento.
+
+## 1. Introducción
+La gestión de roles (Spec 03) representa el perímetro de seguridad lógico de la aplicación. Un fallo en el aislamiento de privilegios o en la validación de tokens expone directamente la integridad de los datos de eventos y registros de usuarios.
+
+### Inventario de activos a proteger
+*   **Activos de Información:** Tokens de autenticación (JWT), base de datos de asignación de permisos (RBAC), datos sensibles de usuarios e inscritos.
+*   **Activos de Software:** Middleware de autorización del Backend, lógica de rutas protegidas (*Protected Routes*) en el Frontend.
+*   **Activos de Procesos:** Flujo de escalado de permisos (ascender participantes a disertantes/co-organizadores).
+
+### Objetivos
+*   Garantizar que ningún usuario pueda realizar acciones que no correspondan a su perfil asignado (Organizador, Disertante, Participante).
+*   Blindar las rutas de la API contra ataques de escalación de privilegios verticales y horizontales mediante controles basados en estándares OWASP.
+
+---
+
+## 2. Taxonomía de los Riesgos
+
+| Identificador | Elemento | Riesgo | Vinculación del riesgo |
+| :--- | :--- | :--- | :--- |
+| **R1** | Token / Sesión | **Secuestro de Objetivos del Agente / Token Hijacking (ASI01/OWASP):** Fuga o intercepción de JWT que permite la suplantación de la identidad del Organizador. | Producto / Proyecto |
+| **R2** | Middleware de Rutas | **Abuso de Privilegios por Falla de Validación (ASI03):** El Middleware falla en verificar el `role_id` en el Backend, permitiendo peticiones directas no autorizadas a rutas críticas. | Producto |
+| **R3** | Panel de Administración | **Escalación de Privilegios Horizontal:** Un Participante manipula los parámetros de la petición de actualización de perfil para auto-ascenderse a Organizador. | Producto / Negocio |
+| **R4** | Base de Datos / Caché | **Pérdida de Disponibilidad del Almacén de Roles:** Caída del servidor de persistencia o sistema de caché (Redis), provocando la inaccesibilidad global a los permisos del sistema. | Producto |
+| **R5** | Interfaz Adaptable | **Inconsistencia Visual y Fuga Operativa:** Botones administrativos expuestos visualmente a roles incorrectos por fallas en el renderizado condicional del Frontend. | Producto |
+
+---
+
+## 3. Declaración de los Riesgos
+
+*   **R1:** 
+    *   **Condición:** Almacenamiento inseguro de JWT en el Frontend o falta de cifrado en tránsito.
+    *   **Consecuencia:** Intercepción de credenciales activas por atacantes externos.
+    *   **Efecto:** Pérdida total de confidencialidad, acceso no autorizado a datos institucionales y modificación maliciosa de eventos.
+*   **R2:** 
+    *   **Condición:** Confianza excesiva en los filtros de seguridad del Frontend sin validación simétrica en el Backend.
+    *   **Consecuencia:** Ejecución de comandos administrativos remotos mediante herramientas de testing de API (Postman/Curl).
+    *   **Efecto:** Alteración de la base de datos de usuarios y eliminación de registros de eventos críticos.
+*   **R3:** 
+    *   **Condición:** Ausencia de controles estrictos de propiedad y autorización en el endpoint de asignación de roles.
+    *   **Consecuencia:** Asignación indebida de roles de Organizador o Disertante por parte de usuarios comunes.
+    *   **Efecto:** Violación de las reglas de negocio establecidas y pérdida de control administrativo del sistema.
+
+---
+
+## 4. Estimación de la Probabilidad
+
+### Tabla de Referencia de Probabilidad
+| Rango de probabilidad | Promedio para el cálculo | Expresión de lenguaje natural | Valor numérico |
+| :--- | :--- | :--- | :--- |
+| de 1% a 10% | 5% | Baja | 1 |
+| de 11% a 25% | 18% | Poco probable | 2 |
+| de 26% a 55% | 40% | Media | 3 |
+| de 56% a 80% | 68% | Altamente probable | 4 |
+| de 81% a 99% | 90% | Casi seguro | 5 |
+
+### Estimación de probabilidad para cada riesgo:
+| Identificador | Elemento | Expresión | Probabilidad (Valor) |
+| :--- | :--- | :--- | :--- |
+| **R1** | Token / Sesión | Media | 3 |
+| **R2** | Middleware de Rutas | Poco probable | 2 |
+| **R3** | Panel de Administración | Poco probable | 2 |
+| **R4** | Base de Datos / Caché | Baja | 1 |
+| **R5** | Interfaz Adaptable | Media | 3 |
+
+---
+
+## 5. Estimación del Impacto
+
+### Tabla de Referencia de Impacto
+| Criterio | Período en el que el proyecto se verá afectado | Valor numérico |
+| :--- | :--- | :--- |
+| Insignificante | Menos de 24 horas (sin afectación de datos) | 1 |
+| Marginal | De 1 a 3 días (afectación visual menor) | 2 |
+| Medio | De 3 a 7 días (re-trabajo en módulos aislados) | 3 |
+| Crítico | Más de 1 semana (corrupción parcial de base de datos) | 4 |
+| Catastrófico | Parálisis total del proyecto / Sanciones legales graves | 5 |
+
+### Estimación del impacto para cada riesgo:
+| Identificador | Riesgo | Impacto |
+| :--- | :--- | :--- |
+| **R1** | Secuestro de Objetivos del Agente / Token Hijacking | Catastrófico (5) |
+| **R2** | Abuso de Privilegios por Falla de Validación | Crítico (4) |
+| **R3** | Escalación de Privilegios Horizontal | Medio (3) |
+| **R4** | Pérdida de Disponibilidad del Almacén de Roles | Crítico (4) |
+| **R5** | Inconsistencia Visual y Fuga Operativa | Marginal (2) |
+
+---
+
+## 6. Magnitud de Exposición al Riesgo
+
+Umbrales: 1 = Bajo riesgo | 2 a 3 = Riesgo medio | 4 a 5 = Alto riesgo.
+
+| Identificador | Riesgo | Impacto | Probabilidad | Exposición (I * P) |
+| :--- | :--- | :--- | :--- | :--- |
+| **R1** | Secuestro de Objetivos / Token Hijacking | 5 | 3 | **15 (Alto Riesgo)** |
+| **R2** | Abuso de Privilegios en Middleware | 4 | 2 | **8 (Alto Riesgo)** |
+| **R3** | Escalación de Privilegios Horizontal | 3 | 2 | **6 (Riesgo Medio)** |
+| **R4** | Pérdida de Disponibilidad del Almacén de Roles | 4 | 1 | **4 (Riesgo Medio)** |
+| **R5** | Inconsistencia Visual y Fuga Operativa | 2 | 3 | **6 (Riesgo Medio)** |
+
+---
+
+## 7. Planes de Gestión de los Riesgos
+
+La gestión de los riesgos se reconoce como un proceso continuo, por lo que el presente documento podría ser adaptado a medida que se avanza con su ejecución. Se presentan los planes de acción (preventivos) and de contingencias (reactivos) para los riesgos cuya exposición fuera superior a los umbrales definidos.
+
+### Gestión de R1 (Token Hijacking / Secuestro de Objetivos)
+*   **Importancia del riesgo:** Crítica. Compromete la identidad de los administradores y la seguridad de todos los módulos asociados.
+*   **Información requerida para su seguimiento:** Logs de auditoría de generación de tokens, reportes de IPs anómalas en inicios de sesión.
+*   **Responsable:** Arquitecto de Seguridad / Desarrollador Backend.
+*   **Recursos necesarios:** Librerías de cifrado, entorno de pruebas para tokens expirados.
+
+#### 1.1. Plan de acción (Mitigación/Prevención)
+*   **1.1.1.** Implementar la cookie `HttpOnly` y `Secure` para el almacenamiento del JWT en el cliente, evitando su lectura mediante scripts maliciosos (XSS).
+*   **1.1.2.** Configurar un tiempo de expiración corto para los tokens de acceso (máximo 15 minutos) e implementar tokens de refresco (*Refresh Tokens*) rotativos.
+
+#### 1.2. Plan de contingencias
+*   **Disparador:** Detección de múltiples accesos concurrentes con el mismo token desde diferentes ubicaciones geográficas o reporte manual de suplantación.
+*   **1.2.1.** Ejecución de un script automatizado de invalidación masiva de sesiones activas en el almacén de caché (Redis) para el usuario afectado.
+*   **1.2.2.** Activación temporal de bloqueo de cuenta y solicitud forzada de re-autenticación multifactor (2FA) en el próximo login.
+
+---
+
+### Gestión de R2 (Abuso de Privilegios / Falla en Middleware)
+*   **Importancia del riesgo:** Alta. Evita que usuarios con rol de Participante ejecuten acciones destructivas de Organizadores (ej: borrar eventos).
+*   **Información requerida para su seguimiento:** Pruebas automatizadas de integración en el pipeline de CI/CD, registros de errores 403 en el servidor.
+*   **Responsable:** Desarrollador Backend Principal.
+*   **Recursos necesarios:** Framework de testing (Jest/PyTest), Middleware centralizado de control de acceso.
+
+#### 2.1. Plan de acción (Mitigación/Prevención)
+*   **2.1.1.** Aplicar el principio de Mínima Agencia (Least Agency): aislar por completo las consultas a nivel de ruta en el servidor e inyectar el control de acceso en cada petición HTTP de forma mandatoria.
+*   **2.1.2.** Escribir pruebas unitarias automatizadas que simulen llamadas de usuarios sin permisos a endpoints protegidos (ej. `/api/admin/delete-event`) asegurando que devuelvan estrictamente el código HTTP 403.
+
+#### 2.2. Plan de contingencias
+*   **Disparador:** Registro en los logs de una llamada exitosa (HTTP 200) a un endpoint crítico por parte de un usuario con rol no autorizado.
+*   **2.2.1.** Apagar de manera inmediata el endpoint afectado (mantenimiento temporal del módulo) mediante variables de entorno (*Feature Flags*).
+*   **2.2.2.** Auditoría forense de la base de datos de auditoría inalterable para revertir cualquier cambio no autorizado realizado durante la brecha antes de levantar el servicio nuevamente.
+
+---
+
+## 7. Enriquecimiento de historias de usuario
+
+En **Spec 03 - Gestión de Roles**:
+
+Historia enriquecida:  
+*“Como administrador u organizador, quiero cambiar el rol de un usuario de forma segura, de modo que los permisos de acceso no puedan ser manipulados ni escalados por usuarios no autorizados.”*  
+ 
+Controles OWASP:  
+- Validación estricta de roles y permisos en el servidor mediante Middleware de autorización antes de impactar cambios.  
+- Uso de tokens (JWT) firmados criptográficamente que incluyan el role_id de forma inmutable.  
+- Registro y auditoría inalterable (Logs) de todos los intentos de modificación de privilegios.  
+------------------------------------------------------------------------------------------------
+
+## 8. Conclusión
+El análisis permite anticipar riesgos críticos y definir acciones concretas.  
+El enriquecimiento de historias con controles OWASP fortalece la seguridad del sistema y asegura cumplimiento de buenas prácticas.

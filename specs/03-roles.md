@@ -11,6 +11,15 @@ Este módulo centraliza la administración de permisos y accesos dentro de la pl
         oCriterio de Aceptación: El menú lateral y las rutas protegidas impiden el acceso a la creación de eventos o gestión de otros usuarios.
     •Historia: Como disertante, quiero acceder a la lista de asistentes de mi evento para preparar mi material.
         oCriterio de Aceptación: El sistema identifica al usuario como "disertante" vinculado a un evento y le otorga permisos de lectura sobre la nómina de ese evento específico.
+
+    Historia enriquecida:  
+    *“Como administrador u organizador, quiero cambiar el rol de un usuario de forma segura, de modo que los permisos de acceso no puedan ser manipulados ni escalados por usuarios no autorizados.”*  
+ 
+    Controles OWASP:  
+    - Validación estricta de roles y permisos en el servidor mediante Middleware de autorización antes de impactar cambios.  
+    - Uso de tokens (JWT) firmados criptográficamente que incluyan el role_id de forma inmutable.  
+    - Registro y auditoría inalterable (Logs) de todos los intentos de modificación de privilegios.  
+
 ## 3. Requisitos Funcionales y Reglas de Negocio
     •RF1: El sistema debe permitir la creación de tres roles predefinidos: Organizador, Disertante y Participante.
     •RF2: El sistema debe restringir el acceso a las rutas de API y vistas de frontend mediante un Middleware de autorización.
