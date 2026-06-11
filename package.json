@@ -1,0 +1,24 @@
+{
+  "name": "tp5-gesti-n-de-entornos-de-desarrollo",
+  "version": "1.0.0",
+  "description": "Este repositorio tiene como objetivo la realización y entrega de trabajos de la materia Actualidad Informática.\r Integrantes\r - Acosta, Aldana Lujan\r - Meza, Silvina Meza\r - Vega, Micela Ayelen",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gigisela30/Tp5-Gesti-n-de-entornos-de-desarrollo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Gigisela30/Tp5-Gesti-n-de-entornos-de-desarrollo/issues"
+  },
+  "homepage": "https://github.com/Gigisela30/Tp5-Gesti-n-de-entornos-de-desarrollo#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "pg": "^8.21.0"
+  }
+}
